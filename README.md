@@ -9,7 +9,7 @@ Radically simple gettext tokens extraction tool for:
 - Jade/Pug
 - Javascript/ES7+
 - Vue
-- TypeScript (see [Known Issues](#known-issues))
+- TypeScript
 - Nativescript Vue with [native and web shared code](https://www.nativescript.org/vue)
 
 files.
@@ -21,7 +21,7 @@ You can install the [easygettext](https://www.npmjs.com/package/easygettext) pac
 ```bash
 npm install --save-dev easygettext
 ```
-or 
+or
 ```bash
 yarn add --dev easygettext
 ```
@@ -64,10 +64,10 @@ It recognizes the following token flavours (currently; feel free to extend it!)
 
 <translate>Hello World</translate>
 
-<!--  The following becomes 'Broken strings are joined'  --> 
+<!--  The following becomes 'Broken strings are joined'  -->
 <span ng-bind="{{ 'Broken '
  + 'strings ' +
- 'are ' + 
+ 'are ' +
  'joined' |translate}}"></span>
 
  <span ng-bind="'Bed n\'' + ' breakfast' |translate"></span>
@@ -75,7 +75,7 @@ It recognizes the following token flavours (currently; feel free to extend it!)
  <!-- JavaScript expressions are parsed and compiled -->
 <span ng-bind="true ? 'Always' : 'Never' |i18n "></span>
 
-<!--  By supplying the  --filterPrefix '::' parameter  -->  
+<!--  By supplying the  --filterPrefix '::' parameter  -->
 <span>{{:: 'Something …' |translate}}</span>
 
 <!--  The default delimiters '{{' and '}}' must be changed to empty strings to handle these examples  -->
@@ -226,7 +226,7 @@ and (2)
 <a href="#" ng-bind="'Link text' |translate"></a>
 <a href="#">{{::'Link text' |translate}}</a>
 <a href="#">{{'Link text' |translate}}</a>
-``` 
+```
 you should run the extraction tool twice.  Once with the command-line arguments
 ```bash
 --startDelimiter '{{' --endDelimiter '}}' --filterPrefix '::'
@@ -254,7 +254,7 @@ html_b=${workdir}/messages-html.pot
 es_a=${workdir}/ecmascript.pot
 # [...] > ${es_a}
 
-# Merge the different catalog templates with `msgcat`:  
+# Merge the different catalog templates with `msgcat`:
 merged_pot=${workdir}/merged.pot
 msgcat ${html_a} ${html_b} ${es_a} > ${merged_pot}
 
@@ -269,7 +269,7 @@ cat ${header} ${body} > ${output_file}
 
 # Remove temporary directory with working files.
 rm -r ${workdir}
-``` 
+```
 Please note that the script needs to be modified to match your needs and environment.
 
 ### Testing
@@ -317,7 +317,7 @@ Also, by utilizing either [acorn](https://github.com/ternjs/acorn) or [babel](ht
 ```html
 <span ng-bind="isNight ? 'Moon' + 'shine' : 'Day' + 'light' |translate"></span>
 <span ng-bind="isC ? 'C' + (isD ? 'D' : 'd') : 'c' + (isE ? 'E' : 'e') |i18n "></span>
-``` 
+```
 will produce the following strings
 ```text
 Moonshine
@@ -326,12 +326,8 @@ CD
 Cd
 cE
 ce
-``` 
+```
 Which will be correctly looked up and translated during runtime, at least by [angular-gettext](https://angular-gettext.rocketeer.be/). 
-
-### Known Issues
-
-TypeScript support is currently limited in that line numbers are not tracked and won't show in generated .po files. This can lead to issues with more complex translations and should be kept in mind.
 
 ### Credits
 

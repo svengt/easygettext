@@ -68,7 +68,7 @@ function preprocessScript(data, type) {
       const vueTemplate = compileTemplate({source: vueFile.template.content});
       contents.push({
         content: vueTemplate.code,
-        lang: 'js',
+        lang: 'ts',
         lineOffset: vueFile.template.loc.start.line,
         template: true
       });

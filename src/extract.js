@@ -60,15 +60,17 @@ function preprocessScript(data, type) {
       contents.push({
         content: vueFile.script.content.trim(),
         lang: vueFile.script.lang || 'js',
+        lineOffset: vueFile.script.loc.start.line
       });
     }
 
     if (vueFile.template) {
       const vueTemplate = compileTemplate({source: vueFile.template.content});
-
       contents.push({
         content: vueTemplate.code,
         lang: 'js',
+        lineOffset: vueFile.template.loc.start.line,
+        template: true
       });
     }
   } else {
@@ -183,6 +185,11 @@ function cartesian(a, b, ...c) {
   return (b ? cartesian(_cartesian(a, b), ...c) : a);
 }
 
+function applyLineOffset(strings, lineOffset) {
+  strings.forEach(s => {
+    s.reference.line += lineOffset
+  })
+}
 
 // Functions helpful during development:
 // function _dump(value) {
@@ -266,25 +273,36 @@ exports.Extractor = class Extractor {
   }
 
   extract(filename, ext, content, jsParser = 'auto') {
-    const templateData = preprocessTemplate(content, ext, filename);
-
-    if (templateData) {
-      this.parse(filename, templateData);
-    }
-
-    preprocessScript(content, ext).forEach(
-      ({content: fileContent, lang}) => {
+    const parts = preprocessScript(content, ext)
+    parts.forEach(
+      ({content: fileContent, lang, lineOffset}) => {
         if (lang === 'js') {
-          this.parseJavascript(filename, fileContent, jsParser);
+          this.parseJavascript(filename, fileContent, lineOffset, jsParser);
         } else if (lang === 'ts') {
-          this.parseTypeScript(filename, fileContent);
+          this.parseTypeScript(filename, fileContent, lineOffset);
         }
       },
     );
+
+    const templateData = preprocessTemplate(content, ext, filename);
+    if (templateData) {
+      let lineOffset = 0
+      // This is ugly ...
+      // It would be nicer if the preprocessTemplate function would return a lineOffset on its own
+      // but the vue template extraction does not use the vue-sfc (which is already used in preprocessScript)
+      // to fix this properly we would need to spend more time than is currently feasible. This works for us.
+      const templatePart = parts.find(part => part.template)
+      if (templatePart) {
+        lineOffset = templatePart.lineOffset
+      }
+      this.parse(filename, templateData, lineOffset);
+    }
   }
 
-  parse(filename, content) {
+  parse(filename, content, lineOffset = 0) {
     const extractedData = this._extractTranslationData(filename, content);
+
+    applyLineOffset(extractedData, lineOffset)
 
     this.processStrings(extractedData);
   }
@@ -317,18 +335,22 @@ exports.Extractor = class Extractor {
     }
   }
 
-  parseJavascript(filename, content, parser = 'auto') {
+  parseJavascript(filename, content, lineOffset = 0, parser = 'auto') {
     const jsContent = flowRemoveTypes(content).toString();
 
     const extractedStringsFromScript = jsExtractor.extractStringsFromJavascript(filename, jsContent, parser);
 
+    applyLineOffset(extractedStringsFromScript, lineOffset)
+
     this.processStrings(extractedStringsFromScript);
   }
 
-  parseTypeScript(filename, content) {
+  parseTypeScript(filename, content, lineOffset = 0) {
     const tsContent = flowRemoveTypes(content).toString();
 
-    const extractedStringsFromScript = tsExtractor.extractStringsFromTypeScript(filename, tsContent);
+    const extractedStringsFromScript = tsExtractor.extractStringsFromTypeScript(filename, tsContent)
+
+    applyLineOffset(extractedStringsFromScript, lineOffset)
 
     this.processStrings(extractedStringsFromScript);
   }
